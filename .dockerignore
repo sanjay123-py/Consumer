@@ -1,0 +1,7 @@
+*.egg-info
+sample_data
+*.md
+LICENSE
+logs
+main.py
+.git
