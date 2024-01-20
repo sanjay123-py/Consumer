@@ -1,9 +1,8 @@
 FROM python:3.8
-RUN mkdir consumer
-COPY . ./consumer/
-WORKDIR /consumer
+RUN mkdir consumer1
+COPY . ./consumer1/
+WORKDIR /consumer1
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-RUN chmod 777 start.sh
 RUN apt update -y && apt install awscli -y
-CMD ["./start.sh"]
+CMD ["python", "consumer_main.py"]

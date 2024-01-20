@@ -1,4 +1,4 @@
-import os, sys
+import os
 
 API_KEY = os.getenv('API_KEY', None)
 
@@ -24,6 +24,8 @@ def sasl_config():
         'sasl.username' : API_KEY,
         'sasl.password' : API_SECRET_KEY
         }
+    print(os.getenv('ENDPOINT_SCHEMA_URL', None))
+    print(sasl_conf)
     return sasl_conf
 
 def schema_config():

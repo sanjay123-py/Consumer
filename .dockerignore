@@ -1,5 +1,4 @@
 *.egg-info
-sample_data
 *.md
 LICENSE
 logs
