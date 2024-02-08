@@ -3,5 +3,6 @@ requests
 six
 pandas
 dnspython
+boto3
 jsonschema
 -e .
