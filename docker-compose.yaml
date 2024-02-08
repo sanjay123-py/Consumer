@@ -1,8 +1,8 @@
 version: '1'
 services:
-  consumer :
-    build: .
-    container_name: rds_consumer
+  consumer:
+    image: ${IMAGE_NAME}
+    container_name: consumer_container
     environment:
       - API_KEY=${API_KEY}
       - API_SECRET_KEY=${API_SECRET_KEY}
@@ -12,3 +12,5 @@ services:
       - SCHEMA_REGISTRY_API_SECRET=${SCHEMA_REGISTRY_API_SECRET}
       - SECURITY_PROTOCOL=${SECURITY_PROTOCOL}
       - SSL_MECHANISM=${SSL_MECHANISM}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}

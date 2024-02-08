@@ -1,0 +1,82 @@
+name: workflow
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-push-image-to-ecr:
+    name: Continous Delivery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Utilizes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq unzip
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to AMAZON ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+  Continuous-Deployment:
+    needs: build-push-image-to-ecr
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install Utilizes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq unzip
+
+      - name: Login to AMAZON ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Pull docker image
+        run: |
+          docker rmi ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest -f docker rm consumer_container
+          docker pull ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+
+      - name: Run docker image to serve users
+        run: |
+          export IMAGE_NAME="${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}":latest AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" AWS_REGION="${{ secrets.AWS_REGION }}"
+          export API_KEY="${{ secrets.API_KEY }}" API_SECRET_KEY="${{ secrets.API_SECRET_KEY }}" ENDPOINT_SCHEMA_URL="${{ secrets.ENDPOINT_SCHEMA_URL }}"
+          export BOOTSTRAP_SERVER="${{ secrets.BOOTSTRAP_SERVER }}" SCHEMA_REGISTRY_API_KEY="${{ secrets.SCHEMA_REGISTRY_API_KEY }}"
+          export SCHEMA_REGISTRY_API_SECRET="${{ secrets.SCHEMA_REGISTRY_API_SECRET }}" SECURITY_PROTOCOL="${{ secrets.SECURITY_PROTOCOL }}"
+          export SSL_MECHANISM="${{ secrets.SSL_MECHANISM }}"
+          docker compose up -d
