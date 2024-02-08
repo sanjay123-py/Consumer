@@ -30,7 +30,7 @@ def consume_data(topic:str, schema_path:str):
             record: Generic = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
             s3object = s3.Object(BUCKET_NAME, f'rating-data-{en}.json')
             s3object.put(
-                Body=(bytes(json.dumps(record).encode('UTF-8')))
+                Body=(bytes(json.dumps(record.to_dict()).encode('UTF-8')))
             )
         except KeyboardInterrupt:
             break
