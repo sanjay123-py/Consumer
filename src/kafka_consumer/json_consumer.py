@@ -1,5 +1,6 @@
 import os, sys
 import time
+import json
 from confluent_kafka import Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.json_schema import JSONDeserializer
@@ -19,12 +20,18 @@ def consume_data(topic:str, schema_path:str):
     })
     consumer = Consumer(consumer_conf)
     consumer.subscribe([topic])
+    en = 0
+    s3 = Generic.s3_obj()
     while True:
         try:
             msg = consumer.poll(1.0)
             if msg is None:continue
+            en = en+1
             record: Generic = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
-            print(record.to_dict())
-        except KeyboardInterrupt :
+            s3object = s3.Object(BUCKET_NAME, f'rating-data-{en}.json')
+            s3object.put(
+                Body=(bytes(json.dumps(record).encode('UTF-8')))
+            )
+        except KeyboardInterrupt:
             break
     consumer.close()

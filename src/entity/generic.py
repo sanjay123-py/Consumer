@@ -1,6 +1,6 @@
 import logging
 import os, sys
-import json
+import json,boto3
 import pandas as pd
 import numpy as np
 from src.constants import SCHEMA_FILE_PATH
@@ -13,6 +13,16 @@ class Generic:
 
     def to_dict(self):
         return self.__dict__
+
+    @classmethod
+    def s3_obj(cls):
+        s3 = boto3.resource(
+            service_name="s3",
+            region_name=os.getenv('AWS_REGION'),
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        )
+        return s3
 
     @classmethod
     def dict_to_instance(cls,dict_1:dict,ctx):
