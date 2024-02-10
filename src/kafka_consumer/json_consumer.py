@@ -32,6 +32,7 @@ def consume_data(topic:str, schema_path:str):
             s3object.put(
                 Body=(bytes(json.dumps(record.to_dict()).encode('UTF-8')))
             )
+            print(record.to_dict())
         except KeyboardInterrupt:
             break
     consumer.close()
