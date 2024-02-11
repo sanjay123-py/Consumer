@@ -1,5 +1,4 @@
 import os, sys
-import time
 import json
 from confluent_kafka import Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
